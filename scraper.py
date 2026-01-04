@@ -18,7 +18,12 @@ def get_reddit_posts(subreddits=None, limit=20):
                 post = child.get('data', {})
                 text = post.get('title', '') + " " + post.get('selftext', '')
                 if text.strip():
-                    all_posts.append(text)
+                    # Reddit link
+                    post_link = f"https://reddit.com{post.get('permalink', '')}"
+                    all_posts.append({
+                        "text": text,
+                        "link": post_link
+                    })
         except Exception as e:
             print(f"Error fetching subreddit {subreddit}: {e}")
 
@@ -43,9 +48,14 @@ def get_github_issues(repos=None, limit=10):
             response.raise_for_status()
             data = response.json()
             for issue in data:
-                text = issue.get('title', '') + " " + issue.get('body', '')
+                if "pull_request" in issue:
+                    continue
+                text = issue.get('title', '') + " " + (issue.get('body') or '')
                 if text.strip():
-                    issues_list.append(text)
+                    issues_list.append({
+                        "text": text,
+                        "link": issue.get("html_url")
+                    })
         except Exception as e:
             print(f"Error fetching repo {repo}: {e}")
 
@@ -62,4 +72,4 @@ if __name__ == "__main__":
     texts = get_texts()
     print(f"Fetched {len(texts)} posts/issues:")
     for t in texts[:5]:
-        print("-", t[:120], "...")
+        print("-", t["text"][:120], "... Link:", t["link"])

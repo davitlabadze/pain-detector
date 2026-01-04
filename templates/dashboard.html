@@ -2,98 +2,153 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Pain Detector Dashboard</title>
+    <title>Pain Detector MVP</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
       body {
-        font-family: Arial, sans-serif;
-        background: #f9fafb;
-        padding: 20px;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: #f4f5f7;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
       }
+
+      .container {
+        max-width: 800px;
+        width: 100%;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .logo {
+        width: 100px;
+        height: 100px;
+        background: #4f46e5;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        font-size: 32px;
+        font-weight: bold;
+        margin-bottom: 15px;
+      }
+
       h1 {
+        color: #1f2937;
         margin-bottom: 20px;
+        text-align: center;
       }
 
       .controls {
-        margin-bottom: 15px;
         display: flex;
-        gap: 10px;
-        align-items: center;
+        gap: 15px;
+        margin-bottom: 25px;
         flex-wrap: wrap;
+        justify-content: center;
       }
-      .controls select,
-      .controls input {
+
+      select {
         padding: 6px 10px;
-        border-radius: 5px;
-        border: 1px solid #ccc;
+        border-radius: 6px;
+        border: 1px solid #cbd5e1;
+        background: white;
+        font-size: 14px;
       }
 
       .card {
         background: white;
-        border-radius: 8px;
+        border-radius: 10px;
         padding: 15px;
-        margin-bottom: 10px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-        cursor: pointer;
-        transition: all 0.2s ease;
+        margin-bottom: 15px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+        width: 800px;
+        transition: min-height 0.3s ease;
       }
-      .card.open {
-        background: #f1f5f9;
-      }
+
       .card-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         gap: 10px;
       }
+
       .badges {
         display: flex;
         gap: 6px;
         flex-wrap: wrap;
       }
+
       .badge {
         background: #e0e7ff;
-        color: #1e3a8a;
+        color: #3730a3;
         padding: 4px 8px;
         border-radius: 6px;
         font-size: 12px;
       }
+
       .score {
-        font-size: 13px;
         font-weight: bold;
+        font-size: 13px;
         margin-right: 10px;
       }
-      .copy-btn {
-        padding: 5px 10px;
+
+      .card-actions {
+        display: flex;
+        gap: 6px;
+      }
+
+      .copy-btn,
+      .link-btn {
+        padding: 5px 8px;
         font-size: 12px;
         border: none;
         border-radius: 5px;
-        background: #4f46e5;
-        color: white;
         cursor: pointer;
       }
+
+      .copy-btn {
+        background: #4f46e5;
+        color: white;
+      }
+
       .copy-btn:hover {
         background: #4338ca;
       }
+
+      .link-btn {
+        background: #2563eb;
+        color: white;
+      }
+
+      .link-btn:hover {
+        background: #1d4ed8;
+      }
+
       .card-body {
-        margin-top: 10px;
+        margin-top: 12px;
         display: none;
         font-size: 14px;
-        color: #374151;
-        line-height: 1.5;
+        color: #111827;
+        line-height: 1.6;
       }
+
       .card.open .card-body {
         display: block;
       }
 
-      /* Markdown-like styling */
       .card-body pre {
         background: #111827;
         color: #e5e7eb;
-        padding: 10px;
-        border-radius: 5px;
+        padding: 12px;
+        border-radius: 6px;
         overflow-x: auto;
         font-size: 13px;
       }
+
       .card-body code {
         background: #f3f4f6;
         color: #1f2937;
@@ -101,135 +156,144 @@
         border-radius: 4px;
         font-size: 13px;
       }
-    </style>
-  </head>
-  <body>
-    <h1>🧠 Pain Detector Dashboard</h1>
 
-    <div class="controls">
-      <label>
-        Filter by Pain Type:
-        <select id="painFilter">
-          <option value="">All</option>
-          <option value="Time pain">Time pain</option>
-          <option value="Cost pain">Cost pain</option>
-          <option value="Data pain">Data pain</option>
-          <option value="Risk pain">Risk pain</option>
-        </select>
-      </label>
-
-      <label>
-        Min Score:
-        <input
-          type="number"
-          id="minScore"
-          value="1"
-          min="1"
-          style="width: 60px"
-        />
-      </label>
-
-      <label>
-        Sort by Score:
-        <select id="sortOrder">
-          <option value="desc">Descending</option>
-          <option value="asc">Ascending</option>
-        </select>
-      </label>
-    </div>
-
-    <div id="cardsContainer"></div>
-
-    <script>
-      // Sample data (replace with actual fetch)
-      const techPains = [
-        {
-          text: "AWS EC2 instance fails with memory leak and high latency.",
-          pain_categories: ["Time pain", "Data pain", "Risk pain"],
-          score: 4,
-        },
-        {
-          text: "Kubernetes deployment crashed due to misconfiguration.",
-          pain_categories: ["Risk pain"],
-          score: 2,
-        },
-        {
-          text: "შეცდომა სერვისში, ვერ მუშაობს აპლიკაცია, შეფერხება მოხდა.",
-          pain_categories: ["Risk pain", "Time pain", "Data pain"],
-          score: 3,
-        },
-        {
-          text: "Our CI/CD pipeline has multiple bugs and crashes frequently.",
-          pain_categories: ["Data pain", "Risk pain"],
-          score: 3,
-        },
-      ];
-
-      const container = document.getElementById("cardsContainer");
-      const painFilter = document.getElementById("painFilter");
-      const minScore = document.getElementById("minScore");
-      const sortOrder = document.getElementById("sortOrder");
-
-      function renderCards() {
-        container.innerHTML = "";
-        let filtered = [...techPains];
-
-        // Filter by pain type
-        const pain = painFilter.value;
-        if (pain)
-          filtered = filtered.filter((r) => r.pain_categories.includes(pain));
-
-        // Filter by min score
-        const min = parseInt(minScore.value) || 1;
-        filtered = filtered.filter((r) => r.score >= min);
-
-        // Sort
-        filtered.sort((a, b) =>
-          sortOrder.value === "asc" ? a.score - b.score : b.score - a.score
-        );
-
-        // Render
-        filtered.forEach((r) => {
-          const card = document.createElement("div");
-          card.className = "card";
-          card.innerHTML = `
-          <div class="card-header">
-            <div class="badges">${r.pain_categories
-              .map((c) => `<span class="badge">${c}</span>`)
-              .join("")}</div>
-            <div>
-              <span class="score">Score: ${r.score}</span>
-              <button class="copy-btn">Copy</button>
-            </div>
-          </div>
-          <div class="card-body"><pre>${r.text}</pre></div>
-        `;
-          container.appendChild(card);
-
-          // Toggle body
-          card.querySelector(".card-header").addEventListener("click", () => {
-            card.classList.toggle("open");
-          });
-
-          // Copy button
-          card.querySelector(".copy-btn").addEventListener("click", (e) => {
-            e.stopPropagation();
-            navigator.clipboard.writeText(r.text);
-            const btn = e.target;
-            const original = btn.innerText;
-            btn.innerText = "Copied ✓";
-            setTimeout(() => (btn.innerText = original), 1500);
-          });
-        });
+      .card-body pre code {
+        background: transparent;
+        color: inherit;
+        padding: 0;
       }
 
-      // Event listeners
-      painFilter.addEventListener("change", renderCards);
-      minScore.addEventListener("input", renderCards);
-      sortOrder.addEventListener("change", renderCards);
+      .card-body blockquote {
+        border-left: 4px solid #6366f1;
+        background: #eef2ff;
+        padding: 10px 14px;
+        margin: 10px 0;
+        color: #1e3a8a;
+      }
 
-      // Initial render
-      renderCards();
+      .card-body a {
+        color: #2563eb;
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="logo">🧠</div>
+      <h1>Pain Detector – Results</h1>
+
+      <div class="controls">
+        <select id="filter-category">
+          <option value="">All Categories</option>
+        </select>
+
+        <select id="sort-score">
+          <option value="desc">Score: High → Low</option>
+          <option value="asc">Score: Low → High</option>
+        </select>
+      </div>
+
+      <div id="cards-container">
+        {% for r in results %}
+        <div
+          class="card"
+          data-score="{{ r.score }}"
+          data-categories="{{ r.pain_categories | tojson }}"
+        >
+          <div class="card-header">
+            <div class="badges">
+              {% for c in r.pain_categories %}
+              <span class="badge">{{ c }}</span>
+              {% endfor %}
+            </div>
+
+            <div class="card-actions">
+              <span class="score">Score: {{ r.score }}</span>
+              <button class="copy-btn" data-text="{{ r.text | e }}">
+                Copy
+              </button>
+              <button
+                class="link-btn"
+                onclick="window.open('{{ r.link }}', '_blank')"
+              >
+                🔗
+              </button>
+            </div>
+          </div>
+
+          <div class="card-body" data-md="{{ r.text | e }}"></div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <script>
+      const cards = document.querySelectorAll(".card");
+
+      cards.forEach((card) => {
+        card.addEventListener("click", (e) => {
+          if (e.target.tagName === "BUTTON") return;
+
+          const body = card.querySelector(".card-body");
+          if (!card.classList.contains("open")) {
+            body.innerHTML = marked.parse(body.dataset.md || "");
+          }
+          card.classList.toggle("open");
+        });
+      });
+
+      document.querySelectorAll(".copy-btn").forEach((btn) => {
+        btn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          navigator.clipboard.writeText(btn.dataset.text);
+          const original = btn.innerText;
+          btn.innerText = "Copied ✓";
+          setTimeout(() => {
+            btn.innerText = original;
+          }, 1500);
+        });
+      });
+
+      const filterSelect = document.getElementById("filter-category");
+      const allCategories = new Set();
+      cards.forEach((card) => {
+        JSON.parse(card.dataset.categories).forEach((c) =>
+          allCategories.add(c)
+        );
+      });
+      allCategories.forEach((c) => {
+        const opt = document.createElement("option");
+        opt.value = c;
+        opt.innerText = c;
+        filterSelect.appendChild(opt);
+      });
+
+      function renderCards() {
+        const container = document.getElementById("cards-container");
+        const filterVal = filterSelect.value;
+        const sortVal = document.getElementById("sort-score").value;
+
+        const cardArr = Array.from(cards);
+        cardArr.forEach((card) => {
+          const categories = JSON.parse(card.dataset.categories);
+          card.style.display =
+            filterVal && !categories.includes(filterVal) ? "none" : "block";
+        });
+
+        cardArr.sort((a, b) => {
+          const sA = parseFloat(a.dataset.score);
+          const sB = parseFloat(b.dataset.score);
+          return sortVal === "asc" ? sA - sB : sB - sA;
+        });
+
+        cardArr.forEach((c) => container.appendChild(c));
+      }
+
+      filterSelect.addEventListener("change", renderCards);
+      document
+        .getElementById("sort-score")
+        .addEventListener("change", renderCards);
     </script>
   </body>
 </html>

@@ -46,9 +46,11 @@ TECH_KEYWORDS_GE = [
     "შეცდომა", "შეცდომები", "ვერ მუშაობს", "ჩაშლა", "დაბლოკილი", "შეფერხება", "დაგვიანება", "ძვირი"
 ]
 
-def detect_pain(texts):
+def detect_pain(items):
     results = []
-    for text in texts:
+    for item in items:
+        text = item["text"] 
+        link = item.get("link")
         matches = []
         for word, category in KEYWORDS.items():
             if re.search(r'\b' + re.escape(word) + r'\b', text, re.IGNORECASE):
@@ -57,7 +59,8 @@ def detect_pain(texts):
             results.append({
                 "text": text,
                 "pain_categories": list(set(matches)),
-                "score": len(matches)
+                "score": len(matches),
+                "link": link 
             })
     return results
 
