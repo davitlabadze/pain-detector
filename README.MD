@@ -14,7 +14,7 @@ Markdown text is properly rendered, including code blocks, links, lists, and blo
 
 Copy button:
 
-Copies the text, score, and pain types to clipboard.
+Copies the text, score, and pain types to the clipboard.
 
 GitHub-style code rendering in Markdown.
 
@@ -38,7 +38,7 @@ Optional: Bootstrap/Tailwind for styling enhancements
     ├─ templates/
     │ └─ index.html # Main HTML template
     └─ static/
-    └─ (optional css/js files)
+    └─ (optional CSS/JS files)
 ```
 
 ## How to Run Locally
@@ -85,7 +85,7 @@ Open your browser at [http://127.0.0.1:5000](http://127.0.0.1:5000).
 
 Flask passes a results list to the template:
 
-```json
+```bash
     results = [
     {
         "text": "Some sample GitHub PR or discussion text...",
@@ -100,17 +100,17 @@ Template renders each result as a card:
 
 .card-body stores raw Markdown in data-md
 
-Clicking a card converts Markdown to HTML using marked.parse
+Clicking a card converts Markdown to HTML using marked. parse
 
 Copy button reads data-\* attributes and copies formatted text
 
 ## Styling
 
-Cards have light background with shadow
+Cards have a light background with a shadow
 
 Code blocks have dark background (#111827) with light text (#e5e7eb)
 
-Inline code highlighted with light gray background
+Inline code highlighted with a light gray background
 
 Blockquotes styled with blue accent
 
