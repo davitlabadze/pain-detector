@@ -1,26 +1,65 @@
 import requests
 
-def get_reddit_posts(subreddit='devops', limit=10):
+# ------------ Reddit -------------
+def get_reddit_posts(subreddits=None, limit=20):
+    if subreddits is None:
+        subreddits = ['devops', 'sysadmin', 'kubernetes', 'aws', 'terraform']
+    
     headers = {'User-Agent': 'PainDetector/0.1'}
-    url = f'https://www.reddit.com/r/{subreddit}/new.json?limit={limit}'
-    response = requests.get(url, headers=headers)
-    data = response.json()
-    posts = []
-    for child in data['data']['children']:
-        post = child['data']
-        posts.append(post['title'] + " " + post.get('selftext', ''))
-    return posts
+    all_posts = []
 
-def get_github_issues(repo='prometheus/prometheus', limit=5):
-    url = f'https://api.github.com/repos/{repo}/issues?state=open&per_page={limit}'
-    response = requests.get(url)
-    data = response.json()
-    issues = []
-    for issue in data:
-        issues.append(issue['title'] + " " + issue.get('body', ''))
-    return issues
+    for subreddit in subreddits:
+        url = f'https://www.reddit.com/r/{subreddit}/new.json?limit={limit}'
+        try:
+            response = requests.get(url, headers=headers, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+            for child in data.get('data', {}).get('children', []):
+                post = child.get('data', {})
+                text = post.get('title', '') + " " + post.get('selftext', '')
+                if text.strip():
+                    all_posts.append(text)
+        except Exception as e:
+            print(f"Error fetching subreddit {subreddit}: {e}")
 
+    return all_posts
+
+# ------------ GitHub -------------
+def get_github_issues(repos=None, limit=10):
+    if repos is None:
+        repos = [
+            'prometheus/prometheus',
+            'kubernetes/kubernetes',
+            'hashicorp/terraform',
+            'ansible/ansible'
+        ]
+    
+    issues_list = []
+
+    for repo in repos:
+        url = f'https://api.github.com/repos/{repo}/issues?state=open&per_page={limit}'
+        try:
+            response = requests.get(url, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+            for issue in data:
+                text = issue.get('title', '') + " " + issue.get('body', '')
+                if text.strip():
+                    issues_list.append(text)
+        except Exception as e:
+            print(f"Error fetching repo {repo}: {e}")
+
+    return issues_list
+
+# ------------ Combine all texts -------------
 def get_texts():
-    reddit_posts = get_reddit_posts(limit=10)
-    github_issues = get_github_issues(limit=5)
+    reddit_posts = get_reddit_posts(limit=15)
+    github_issues = get_github_issues(limit=10)
     return reddit_posts + github_issues
+
+# ------------- Test Example -------------
+if __name__ == "__main__":
+    texts = get_texts()
+    print(f"Fetched {len(texts)} posts/issues:")
+    for t in texts[:5]:
+        print("-", t[:120], "...")
