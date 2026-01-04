@@ -2,6 +2,8 @@
 
 A minimal Pain Point Detector web app that highlights pain points from text and renders them as interactive cards with Markdown support.
 
+![alt text](docs/img/image.png)
+
 ## Features
 
 Detects pain categories (Time, Cost, Data, Risk) from user input.
