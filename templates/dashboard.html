@@ -2,43 +2,54 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Pain Detector MVP</title>
-
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
+    <title>Pain Detector Dashboard</title>
     <style>
       body {
         font-family: Arial, sans-serif;
         background: #f9fafb;
         padding: 20px;
       }
-
       h1 {
         margin-bottom: 20px;
+      }
+
+      .controls {
+        margin-bottom: 15px;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .controls select,
+      .controls input {
+        padding: 6px 10px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
       }
 
       .card {
         background: white;
         border-radius: 8px;
         padding: 15px;
-        margin-bottom: 15px;
+        margin-bottom: 10px;
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
         cursor: pointer;
+        transition: all 0.2s ease;
       }
-
+      .card.open {
+        background: #f1f5f9;
+      }
       .card-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         gap: 10px;
       }
-
       .badges {
         display: flex;
         gap: 6px;
         flex-wrap: wrap;
       }
-
       .badge {
         background: #e0e7ff;
         color: #1e3a8a;
@@ -46,13 +57,11 @@
         border-radius: 6px;
         font-size: 12px;
       }
-
       .score {
         font-size: 13px;
         font-weight: bold;
         margin-right: 10px;
       }
-
       .copy-btn {
         padding: 5px 10px;
         font-size: 12px;
@@ -62,33 +71,29 @@
         color: white;
         cursor: pointer;
       }
-
       .copy-btn:hover {
         background: #4338ca;
       }
-
       .card-body {
-        margin-top: 12px;
+        margin-top: 10px;
         display: none;
         font-size: 14px;
-        color: #111827;
-        line-height: 1.6;
+        color: #374151;
+        line-height: 1.5;
       }
-
       .card.open .card-body {
         display: block;
       }
 
-      /* Markdown styling */
+      /* Markdown-like styling */
       .card-body pre {
         background: #111827;
         color: #e5e7eb;
-        padding: 12px;
-        border-radius: 6px;
+        padding: 10px;
+        border-radius: 5px;
         overflow-x: auto;
         font-size: 13px;
       }
-
       .card-body code {
         background: #f3f4f6;
         color: #1f2937;
@@ -96,110 +101,135 @@
         border-radius: 4px;
         font-size: 13px;
       }
-
-      .card-body pre code {
-        background: transparent;
-        color: inherit;
-        padding: 0;
-      }
-
-      .card-body blockquote {
-        border-left: 4px solid #6366f1;
-        background: #eef2ff;
-        padding: 10px 14px;
-        margin: 10px 0;
-        color: #1e3a8a;
-      }
-
-      .card-body ul,
-      .card-body ol {
-        padding-left: 20px;
-      }
-
-      .card-body a {
-        color: #2563eb;
-        text-decoration: underline;
-      }
-
-      .card-body h2,
-      .card-body h3 {
-        margin-top: 14px;
-      }
     </style>
   </head>
-
   <body>
-    <h1>Pain Detector – Results</h1>
+    <h1>🧠 Pain Detector Dashboard</h1>
 
-    {% for r in results %}
-    <div class="card">
-      <div class="card-header">
-        <div class="badges">
-          {% for c in r.pain_categories %}
-          <span class="badge">{{ c }}</span>
-          {% endfor %}
-        </div>
+    <div class="controls">
+      <label>
+        Filter by Pain Type:
+        <select id="painFilter">
+          <option value="">All</option>
+          <option value="Time pain">Time pain</option>
+          <option value="Cost pain">Cost pain</option>
+          <option value="Data pain">Data pain</option>
+          <option value="Risk pain">Risk pain</option>
+        </select>
+      </label>
 
-        <div>
-          <span class="score">Score: {{ r.score }}</span>
-          <button
-            class="copy-btn"
-            data-text="{{ r.text | e }}"
-            data-score="{{ r.score }}"
-            data-categories="{{ r.pain_categories | tojson }}"
-          >
-            Copy
-          </button>
-        </div>
-      </div>
+      <label>
+        Min Score:
+        <input
+          type="number"
+          id="minScore"
+          value="1"
+          min="1"
+          style="width: 60px"
+        />
+      </label>
 
-      <div class="card-body" data-md="{{ r.text | e }}"></div>
+      <label>
+        Sort by Score:
+        <select id="sortOrder">
+          <option value="desc">Descending</option>
+          <option value="asc">Ascending</option>
+        </select>
+      </label>
     </div>
-    {% endfor %}
+
+    <div id="cardsContainer"></div>
 
     <script>
-      document.querySelectorAll(".card").forEach((card) => {
-        card.addEventListener("click", () => {
-          const body = card.querySelector(".card-body");
+      // Sample data (replace with actual fetch)
+      const techPains = [
+        {
+          text: "AWS EC2 instance fails with memory leak and high latency.",
+          pain_categories: ["Time pain", "Data pain", "Risk pain"],
+          score: 4,
+        },
+        {
+          text: "Kubernetes deployment crashed due to misconfiguration.",
+          pain_categories: ["Risk pain"],
+          score: 2,
+        },
+        {
+          text: "შეცდომა სერვისში, ვერ მუშაობს აპლიკაცია, შეფერხება მოხდა.",
+          pain_categories: ["Risk pain", "Time pain", "Data pain"],
+          score: 3,
+        },
+        {
+          text: "Our CI/CD pipeline has multiple bugs and crashes frequently.",
+          pain_categories: ["Data pain", "Risk pain"],
+          score: 3,
+        },
+      ];
 
-          if (!card.classList.contains("open")) {
-            const md = body.dataset.md || "";
-            body.innerHTML = marked.parse(md);
-          }
+      const container = document.getElementById("cardsContainer");
+      const painFilter = document.getElementById("painFilter");
+      const minScore = document.getElementById("minScore");
+      const sortOrder = document.getElementById("sortOrder");
 
-          card.classList.toggle("open");
+      function renderCards() {
+        container.innerHTML = "";
+        let filtered = [...techPains];
+
+        // Filter by pain type
+        const pain = painFilter.value;
+        if (pain)
+          filtered = filtered.filter((r) => r.pain_categories.includes(pain));
+
+        // Filter by min score
+        const min = parseInt(minScore.value) || 1;
+        filtered = filtered.filter((r) => r.score >= min);
+
+        // Sort
+        filtered.sort((a, b) =>
+          sortOrder.value === "asc" ? a.score - b.score : b.score - a.score
+        );
+
+        // Render
+        filtered.forEach((r) => {
+          const card = document.createElement("div");
+          card.className = "card";
+          card.innerHTML = `
+          <div class="card-header">
+            <div class="badges">${r.pain_categories
+              .map((c) => `<span class="badge">${c}</span>`)
+              .join("")}</div>
+            <div>
+              <span class="score">Score: ${r.score}</span>
+              <button class="copy-btn">Copy</button>
+            </div>
+          </div>
+          <div class="card-body"><pre>${r.text}</pre></div>
+        `;
+          container.appendChild(card);
+
+          // Toggle body
+          card.querySelector(".card-header").addEventListener("click", () => {
+            card.classList.toggle("open");
+          });
+
+          // Copy button
+          card.querySelector(".copy-btn").addEventListener("click", (e) => {
+            e.stopPropagation();
+            navigator.clipboard.writeText(r.text);
+            const btn = e.target;
+            const original = btn.innerText;
+            btn.innerText = "Copied ✓";
+            setTimeout(() => (btn.innerText = original), 1500);
+          });
         });
-      });
+      }
 
-      document.querySelectorAll(".copy-btn").forEach((btn) => {
-        btn.addEventListener("click", (event) => {
-          event.stopPropagation();
+      // Event listeners
+      painFilter.addEventListener("change", renderCards);
+      minScore.addEventListener("input", renderCards);
+      sortOrder.addEventListener("change", renderCards);
 
-          const text = btn.dataset.text || "";
-          const score = btn.dataset.score || "0";
-
-          let categories = [];
-          try {
-            categories = JSON.parse(btn.dataset.categories || "[]");
-          } catch (e) {
-            categories = [];
-          }
-
-          const content = `Pain types: ${categories.join(", ")}
-Score: ${score}
-
-${text}`;
-
-          navigator.clipboard.writeText(content);
-
-          const original = btn.innerText;
-          btn.innerText = "Copied ✓";
-
-          setTimeout(() => {
-            btn.innerText = original;
-          }, 1500);
-        });
-      });
+      // Initial render
+      renderCards();
     </script>
   </body>
 </html>
